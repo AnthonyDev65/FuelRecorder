@@ -26,6 +26,7 @@ FROM nginx:1.27-alpine
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/build /usr/share/nginx/html
+COPY --chmod=755 env-config.sh /docker-entrypoint.d/40-env-config.sh
 
 EXPOSE 80
 

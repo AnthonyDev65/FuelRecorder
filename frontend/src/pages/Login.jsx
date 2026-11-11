@@ -32,7 +32,7 @@ const Login = () => {
       await login(data.tarjeta, data.password);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message || 'Credenciales inválidas');
+      setError(err.message || 'Error al iniciar sesión');
     } finally {
       setLoading(false);
     }

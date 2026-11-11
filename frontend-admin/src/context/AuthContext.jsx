@@ -37,7 +37,10 @@ export const AuthProvider = ({ children }) => {
         return userData;
       }
     } catch (error) {
-      throw error.response?.data?.message || 'Error al iniciar sesión';
+      if (!error.response) {
+        throw new Error('No se pudo conectar con el servidor');
+      }
+      throw new Error(error.response.data?.message || 'Error al iniciar sesión');
     }
   };
 
