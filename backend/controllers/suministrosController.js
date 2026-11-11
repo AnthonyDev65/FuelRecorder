@@ -274,6 +274,22 @@ suministrosController.delete = async (req, res) => {
   }
 };
 
+// Borrar todos los suministros (admin, para demostraciones)
+suministrosController.deleteAll = async (req, res) => {
+  try {
+    const result = await pool.query('DELETE FROM suministros');
+    console.log(`⚠ ${req.user.ficha} borró todos los suministros (${result.rowCount})`);
+    res.json({
+      success: true,
+      message: `Se borraron ${result.rowCount} suministros`,
+      data: { borrados: result.rowCount },
+    });
+  } catch (error) {
+    console.error('Delete all suministros error:', error);
+    res.status(500).json({ success: false, message: 'Error al borrar los suministros' });
+  }
+};
+
 // Calculate MDP preview (without saving)
 suministrosController.calculateMDP = async (req, res) => {
   try {

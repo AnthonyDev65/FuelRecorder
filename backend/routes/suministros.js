@@ -15,6 +15,9 @@ router.post('/recalculate-mdp', authorizeRoles('admin'), suministrosController.r
 // Recalculate MDP for a specific record (admin only)
 router.post('/:id/recalculate-mdp', authorizeRoles('admin'), suministrosController.recalculateMDPById);
 
+// Delete all records (admin only, for demos)
+router.delete('/', authorizeRoles('admin'), suministrosController.deleteAll);
+
 // CRUD routes
 router.get('/', suministrosController.getAll);
 router.get('/:id', suministrosController.getById);

@@ -59,6 +59,10 @@ export const suministrosService = {
     const response = await api.delete(`/suministros/${id}`);
     return response.data;
   },
+  deleteAll: async () => {
+    const response = await api.delete('/suministros');
+    return response.data;
+  },
   recalculateMDP: async () => {
     const response = await api.post('/suministros/recalculate-mdp');
     return response.data;
