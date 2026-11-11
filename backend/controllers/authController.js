@@ -6,21 +6,28 @@ const authController = {
   // Login
   login: async (req, res) => {
     try {
-      const { tarjeta, password } = req.body;
+      // El panel admin entra con ficha; la app de técnicos con tarjeta
+      const { ficha, tarjeta, password } = req.body;
 
       // Validation
-      if (!tarjeta || !password) {
+      if ((!ficha && !tarjeta) || !password) {
         return res.status(400).json({
           success: false,
-          message: 'Tarjeta y contraseña son requeridas',
+          message: 'Ficha o tarjeta y contraseña son requeridas',
         });
       }
 
-      // Find user by tarjeta
-      const result = await pool.query(
-        'SELECT * FROM tecnicos WHERE tarjeta = $1',
-        [parseInt(tarjeta)]
-      );
+      if (!ficha && !/^\d+$/.test(String(tarjeta).trim())) {
+        return res.status(401).json({
+          success: false,
+          message: 'Credenciales inválidas',
+        });
+      }
+
+      // Find user by ficha or tarjeta
+      const result = ficha
+        ? await pool.query('SELECT * FROM tecnicos WHERE ficha = $1', [String(ficha).trim()])
+        : await pool.query('SELECT * FROM tecnicos WHERE tarjeta = $1', [String(tarjeta).trim()]);
 
       if (result.rows.length === 0) {
         return res.status(401).json({
