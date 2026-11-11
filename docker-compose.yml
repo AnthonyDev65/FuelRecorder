@@ -64,6 +64,7 @@ services:
     build:
       context: ./frontend-admin
       dockerfile: Dockerfile
+      target: dev
     container_name: fuelrecorder-admin
     restart: unless-stopped
     ports:
@@ -89,6 +90,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      target: dev
     container_name: fuelrecorder-technician
     restart: unless-stopped
     ports:

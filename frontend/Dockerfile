@@ -1,17 +1,32 @@
-FROM node:18-alpine
+# Desarrollo (docker-compose usa target: dev)
+FROM node:22-alpine AS dev
 
 WORKDIR /app
 
-# Install dependencies
 COPY package*.json ./
-RUN npm install && npm cache clean --force
+RUN npm ci && npm cache clean --force
 
-# Copy source code
 COPY . .
-
-# Build for production
-# (handled in docker-compose for dev mode)
 
 EXPOSE 3000
 
 CMD ["npm", "start"]
+
+# Build de producción
+FROM dev AS build
+
+# Se fija en tiempo de build (en Dokploy: Environment → Build-time Arguments)
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
+RUN npm run build
+
+# Producción (etapa por defecto, la que usa Dokploy)
+FROM nginx:1.27-alpine
+
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/build /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
