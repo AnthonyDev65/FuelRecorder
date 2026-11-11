@@ -1,5 +1,5 @@
 # Desarrollo (docker-compose usa target: dev)
-FROM node:22-alpine AS dev
+FROM node:24-alpine AS dev
 
 WORKDIR /app
 
