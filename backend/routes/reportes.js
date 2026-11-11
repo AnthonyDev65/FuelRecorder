@@ -15,10 +15,12 @@ router.get('/', authorizeRoles('admin'), reportesController.getAll);
 // Obtener reporte por ID (solo admin)
 router.get('/:id', authorizeRoles('admin'), reportesController.getById);
 
+// Cerrar el reporte abierto y abrir el siguiente (solo admin).
+// Va antes de /:id/cerrar para que "auto" no se tome como id.
+// El cierre diario lo hace la propia API (utils/reportes.js).
+router.post('/auto/cerrar', authorizeRoles('admin'), reportesController.cerrarReporteAutomatico);
+
 // Cerrar reporte manualmente (solo admin)
 router.post('/:id/cerrar', authorizeRoles('admin'), reportesController.cerrarReporte);
-
-// Cerrar reporte automáticamente (endpoint para cron job)
-router.post('/auto/cerrar', reportesController.cerrarReporteAutomatico);
 
 module.exports = router;

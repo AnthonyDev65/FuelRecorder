@@ -60,19 +60,17 @@ POST https://<tu-dominio>/api/auth/login
 {"ficha": "ADMIN001", "password": "<ADMIN_PASSWORD>"}
 ```
 
-## 5. Cierre automático del reporte diario (opcional)
+## 5. Cierre automático del reporte diario
 
-El endpoint `POST /api/reportes/auto/cerrar` cierra el reporte del día. En Dokploy puedes programarlo en
-**Schedules** de la aplicación con el comando:
+La API cierra sola el reporte del día a las 17:00, hora de República Dominicana; no hace falta configurar
+**Schedules** en Dokploy. Para cambiar la hora o la zona, añade en **Environment**:
 
-```sh
-node -e "fetch('http://localhost:5000/api/reportes/auto/cerrar',{method:'POST'}).then(r=>r.text()).then(console.log)"
+```env
+REPORTE_HORA_CIERRE=17:00
+TZ=America/Santo_Domingo
 ```
 
-y la expresión cron `0 17 * * *` (5 PM; ajusta la zona horaria del servidor).
-
-> Ojo: hoy esa ruta exige un token JWT (`router.use(authenticateJWT)` en `routes/reportes.js`), así que la llamada
-> anterior devuelve 401. Hay que enviarle un token, o protegerla con una clave propia (por ejemplo `CRON_SECRET`) en lugar de JWT.
+Al arrancar, los logs muestran `⏰ Cierre automático de reportes a las 17:00 (America/Santo_Domingo)`.
 
 ## Frontends
 

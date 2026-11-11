@@ -1,4 +1,5 @@
 const pool = require('../config/database');
+const { crearReporte, cerrarReporteAbierto } = require('../utils/reportes');
 
 const reportesController = {
   // Obtener el reporte activo (abierto) del día
@@ -24,14 +25,9 @@ const reportesController = {
           lecturaInicial = lastReporte.rows[0].lectura_final;
         }
 
-        const newReporte = await pool.query(
-          `INSERT INTO reportes_diarios (fecha, lectura_inicial, estado) 
-           VALUES (CURRENT_DATE, $1, 'abierto') 
-           RETURNING *`,
-          [lecturaInicial]
-        );
+        const newReporte = await crearReporte(lecturaInicial);
 
-        return res.json({ success: true, data: newReporte.rows[0] });
+        return res.json({ success: true, data: newReporte });
       }
 
       res.json({ success: true, data: result.rows[0] });
@@ -190,57 +186,19 @@ const reportesController = {
     }
   },
 
-  // Cerrar reporte automáticamente (llamado por cron job)
+  // Cerrar el reporte abierto y abrir el siguiente (el mismo cierre que hace la API a la hora configurada)
   cerrarReporteAutomatico: async (req, res) => {
     try {
-      // Obtener el reporte abierto
-      const reporteResult = await pool.query(
-        `SELECT * FROM reportes_diarios WHERE estado = 'abierto' ORDER BY fecha DESC LIMIT 1`
-      );
+      const resultado = await cerrarReporteAbierto();
 
-      if (reporteResult.rows.length === 0) {
+      if (!resultado) {
         return res.json({ success: true, message: 'No hay reportes abiertos para cerrar' });
       }
-
-      const reporte = reporteResult.rows[0];
-
-      // Obtener la última lectura del dispensador del día
-      const lastLecturaResult = await pool.query(
-        `SELECT lectura_dispensador FROM suministros 
-         WHERE reporte_id = $1 
-         ORDER BY created_at DESC 
-         LIMIT 1`,
-        [reporte.id]
-      );
-
-      let lecturaFinal = reporte.lectura_inicial;
-      if (lastLecturaResult.rows.length > 0) {
-        lecturaFinal = lastLecturaResult.rows[0].lectura_dispensador;
-      }
-
-      // Cerrar el reporte actual
-      await pool.query(
-        `UPDATE reportes_diarios 
-         SET lectura_final = $1, estado = 'cerrado', fecha_cierre = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-         WHERE id = $2`,
-        [lecturaFinal, reporte.id]
-      );
-
-      // Crear nuevo reporte para el siguiente día
-      const newReporte = await pool.query(
-        `INSERT INTO reportes_diarios (fecha, lectura_inicial, estado) 
-         VALUES (CURRENT_DATE + INTERVAL '1 day', $1, 'abierto') 
-         RETURNING *`,
-        [lecturaFinal]
-      );
 
       res.json({
         success: true,
         message: 'Reporte cerrado y nuevo reporte creado',
-        data: {
-          reporteCerrado: { ...reporte, lectura_final: lecturaFinal, estado: 'cerrado' },
-          nuevoReporte: newReporte.rows[0]
-        }
+        data: resultado,
       });
     } catch (error) {
       console.error('Cerrar reporte automático error:', error);

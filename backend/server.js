@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const migrate = require('./migrate');
+const { iniciarCierreAutomatico } = require('./utils/reportes');
 
 const app = express();
 
@@ -44,6 +45,7 @@ migrate()
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+      iniciarCierreAutomatico();
     });
   })
   .catch((err) => {

@@ -45,55 +45,24 @@ POST /api/reportes/:id/cerrar
 Body: { "lectura_final": 1500.50 }
 ```
 
-### Cerrar Reporte Automáticamente
+### Cerrar Reporte Abierto Ahora (Admin)
 ```
 POST /api/reportes/auto/cerrar
 ```
-Cierra el reporte actual y crea uno nuevo para el siguiente día.
+Cierra el reporte abierto con la última lectura del dispensador y abre el siguiente.
 
-## Cierre Automático con Cron
+## Cierre Automático
 
-### Opción 1: Cron del Sistema (Linux/Mac)
-```bash
-# Editar crontab
-crontab -e
+La propia API cierra el reporte cada día (`backend/utils/reportes.js`); no hace falta cron ni servicios externos.
+Revisa cada minuto y, si el reporte abierto ya venció, lo cierra y abre el del día siguiente.
+Si la API estuvo apagada a la hora de cierre, lo cierra en cuanto vuelve a arrancar.
 
-# Agregar línea para ejecutar a las 5 PM diariamente
-0 17 * * * cd /ruta/al/proyecto/backend && node cron-close-report.js >> /var/log/fuel-recorder-cron.log 2>&1
+Variables de entorno del backend:
+
+```env
+REPORTE_HORA_CIERRE=17:00         # HH:MM, por defecto 17:00
+TZ=America/Santo_Domingo          # zona horaria de la operación (por defecto esta)
 ```
-
-### Opción 2: Task Scheduler (Windows)
-1. Abrir "Programador de tareas"
-2. Crear tarea básica
-3. Nombre: "Cerrar Reporte Diario Fuel Recorder"
-4. Desencadenador: Diariamente a las 5:00 PM
-5. Acción: Iniciar programa
-   - Programa: `node`
-   - Argumentos: `cron-close-report.js`
-   - Directorio: `C:\ruta\al\proyecto\backend`
-
-### Opción 3: node-cron (Dentro de la aplicación)
-Agregar al `server.js`:
-```javascript
-const cron = require('node-cron');
-
-// Ejecutar todos los días a las 5 PM
-cron.schedule('0 17 * * *', async () => {
-  console.log('Ejecutando cierre automático de reporte...');
-  try {
-    const axios = require('axios');
-    await axios.post('http://localhost:5000/api/reportes/auto/cerrar');
-    console.log('Reporte cerrado exitosamente');
-  } catch (error) {
-    console.error('Error al cerrar reporte:', error.message);
-  }
-});
-```
-
-### Opción 4: Servicio Externo
-- **EasyCron**: https://www.easycron.com/
-- **Cron-job.org**: https://cron-job.org/
-- Configurar para llamar a: `https://tu-dominio.com/api/reportes/auto/cerrar`
 
 ## Estructura de Base de Datos
 
