@@ -106,9 +106,15 @@ async function hayReporteVencido() {
   return fechaReporte < fecha || (fechaReporte === fecha && pasoHoraCierre());
 }
 
-// Revisa cada minuto; si la API estuvo caída a la hora de cierre, cierra al volver
-function iniciarCierreAutomatico() {
-  const revisar = async () => {
+const UN_MINUTO = 60 * 1000;
+
+// Revisa cada minuto; si la API estuvo caída a la hora de cierre, cierra al volver.
+// while: se repite mientras la API esté encendida. El await de la espera libera el
+// servidor entre vueltas, así que el bucle no bloquea las peticiones.
+async function iniciarCierreAutomatico() {
+  console.log(`⏰ Cierre automático de reportes a las ${HORA_CIERRE} (${ZONA})`);
+
+  while (true) {
     try {
       if (await hayReporteVencido()) {
         const resultado = await cerrarReporteAbierto();
@@ -122,11 +128,9 @@ function iniciarCierreAutomatico() {
     } catch (error) {
       console.error('Error en el cierre automático de reportes:', error.message);
     }
-  };
 
-  revisar();
-  setInterval(revisar, 60 * 1000);
-  console.log(`⏰ Cierre automático de reportes a las ${HORA_CIERRE} (${ZONA})`);
+    await new Promise((r) => setTimeout(r, UN_MINUTO));
+  }
 }
 
 module.exports = { crearReporte, cerrarReporteAbierto, iniciarCierreAutomatico };

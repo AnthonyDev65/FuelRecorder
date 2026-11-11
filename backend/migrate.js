@@ -11,17 +11,24 @@ const MIGRATIONS = [
   'migrations/create-reportes-diarios.sql',
 ];
 
+// do-while: la conexión se intenta siempre al menos una vez, y se repite
+// mientras falle y queden intentos
 async function waitForDatabase(retries = 10) {
-  for (let i = 1; i <= retries; i++) {
+  let intento = 0;
+  let conectado = false;
+
+  do {
+    intento++;
     try {
       await pool.query('SELECT 1');
-      return;
+      conectado = true;
     } catch (err) {
-      console.log(`Esperando base de datos (${i}/${retries}): ${err.message}`);
-      await new Promise((r) => setTimeout(r, 3000));
+      console.log(`Esperando base de datos (${intento}/${retries}): ${err.message}`);
+      if (intento < retries) await new Promise((r) => setTimeout(r, 3000));
     }
-  }
-  throw new Error('No se pudo conectar a la base de datos');
+  } while (!conectado && intento < retries);
+
+  if (!conectado) throw new Error('No se pudo conectar a la base de datos');
 }
 
 async function runMigrations() {
